@@ -44,7 +44,6 @@ const inlineBodyFile = (stub) => {
   const { bodyFileName, ...deconstructedResponse } = response;
 
   fs.readFile(`${argv.mocks}/__files/${bodyFileName}`, (err, bodyData) => {
-
     const bodyBuffer = Buffer.from(bodyData)
     const newResponse = {
       ...deconstructedResponse,
@@ -56,26 +55,33 @@ const inlineBodyFile = (stub) => {
   });
 }
 
+const load = (path) => {
+  fs.readdir(path, (err, files) => {
+    if (err) throw err;
 
-fs.readdir(`${argv.mocks}/mappings`, (err, files) => {
-  if (err) throw err;
-
-  files.forEach(mappingFile => {
-
-    fs.readFile(`${argv.mocks}/mappings/${mappingFile}`, (err, data) => {
-      if (err) throw err;
-
-      let stub = JSON.parse(data);
-
-      if (stub.response.bodyFileName) {
-        inlineBodyFile(stub)
-      } else {
-        addMapping(stub);
+    files.forEach(mappingFile => {
+      
+      if (fs.lstatSync(`${path}/${mappingFile}`).isDirectory()) {
+        findStubs(`${path}/${mappingFile}`);
+        return;
       }
-    });
 
+      fs.readFile(`${path}/${mappingFile}`, (err, data) => {
+        if (err) throw err;
+
+        let stub = JSON.parse(data);
+
+        if (stub.response.bodyFileName) {
+          inlineBodyFile(stub)
+        } else {
+          addMapping(stub);
+        }
+      });
+    })
   })
-});
+}
+
+load(`${argv.mocks}/mappings`);
 
 const listMappingsRequest = {
   hostname: argv.host,
@@ -95,3 +101,4 @@ const getMappings = () => {
 };
 
 setTimeout(() => getMappings(), 300);
+

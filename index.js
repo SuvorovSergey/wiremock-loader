@@ -62,7 +62,7 @@ const load = (path) => {
     files.forEach(mappingFile => {
       
       if (fs.lstatSync(`${path}/${mappingFile}`).isDirectory()) {
-        findStubs(`${path}/${mappingFile}`);
+        load(`${path}/${mappingFile}`);
         return;
       }
 
